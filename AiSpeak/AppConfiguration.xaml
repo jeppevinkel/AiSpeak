@@ -36,7 +36,7 @@
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             
-            <TextBlock x:Name="TxtGoogleCloudKey" />
+            <TextBox x:Name="TxtGoogleCloudKey" IsReadOnly="True" BorderThickness="0" TextWrapping="Wrap"  />
             <Button Grid.Column="1" x:Name="BtnOpenFile">Open file</Button>
         </Grid>
 
