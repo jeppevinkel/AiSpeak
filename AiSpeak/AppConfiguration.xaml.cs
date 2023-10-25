@@ -10,6 +10,8 @@ public partial class AppConfiguration : Window
 
     private string _googleCloudKey;
     private string _elevenLabsApiKey;
+    private string _transcriberApiUrl;
+    private string _transcriberApiToken;
     
     private string GoogleCloudKey
     {
@@ -26,14 +28,20 @@ public partial class AppConfiguration : Window
     
     private string ElevenLabsApiKey
     {
-        get
-        {
-            return _elevenLabsApiKey;
-        }
-        set
-        {
-            _elevenLabsApiKey = value;
-        }
+        get => _elevenLabsApiKey;
+        init => _elevenLabsApiKey = value;
+    }
+    
+    private string TranscriberApiUrl
+    {
+        get => _transcriberApiUrl;
+        init => _transcriberApiUrl = value;
+    }
+    
+    private string TranscriberApiToken
+    {
+        get => _transcriberApiToken;
+        init => _transcriberApiToken = value;
     }
     
     public AppConfiguration()
@@ -42,12 +50,26 @@ public partial class AppConfiguration : Window
 
         GoogleCloudKey = _userSettings.GoogleCloudKey;
         ElevenLabsApiKey = _userSettings.ElevenLabsApiKey;
+        TranscriberApiUrl = _userSettings.Transcriber.ApiUrl;
+        TranscriberApiToken = _userSettings.Transcriber.ApiToken;
 
         TxtBoxElevenLabsApiKey.Text = ElevenLabsApiKey;
+        TxtBoxTranscriberApiUrl.Text = TranscriberApiUrl;
+        TxtBoxTranscriberApiToken.Text = TranscriberApiToken;
 
         TxtBoxElevenLabsApiKey.TextChanged += (sender, args) =>
         {
             _elevenLabsApiKey = TxtBoxElevenLabsApiKey.Text;
+        };
+
+        TxtBoxTranscriberApiUrl.TextChanged += (sender, args) =>
+        {
+            _transcriberApiUrl = TxtBoxTranscriberApiUrl.Text;
+        };
+
+        TxtBoxTranscriberApiToken.TextChanged += (sender, args) =>
+        {
+            _transcriberApiToken = TxtBoxTranscriberApiToken.Text;
         };
 
         BtnOpenFile.Click += (_, _) =>
@@ -72,6 +94,8 @@ public partial class AppConfiguration : Window
         {
             _userSettings.GoogleCloudKey = GoogleCloudKey;
             _userSettings.ElevenLabsApiKey = ElevenLabsApiKey;
+            _userSettings.Transcriber.ApiUrl = TranscriberApiUrl;
+            _userSettings.Transcriber.ApiToken = TranscriberApiToken;
             UserSettings.Save();
             DialogResult = true;
         };

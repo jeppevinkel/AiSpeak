@@ -20,4 +20,12 @@ public class UserSettings : Setting<UserSettings>
     public List<Voice> CachedVoices { get; set; } = new List<Voice>();
     public string ElevenLabsApiKey { get; set; } = "";
     public string GoogleCloudKey { get; set; } = "./google-key.json";
+
+    public TranscriberSettings Transcriber { get; set; } = new();
+}
+
+public class TranscriberSettings
+{
+    public string ApiUrl { get; set; } = "http://127.0.0.1:5000";
+    public string ApiToken { get; set; } = "";
 }

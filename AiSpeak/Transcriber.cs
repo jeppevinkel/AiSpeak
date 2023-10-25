@@ -21,9 +21,9 @@ public static class Transcriber
             {
                 _sharedClient = new()
                 {
-                    BaseAddress = new Uri("http://127.0.0.1:5000"),
+                    BaseAddress = new Uri(UserSettings.Instance.Transcriber.ApiUrl),
                 };
-                _sharedClient.DefaultRequestHeaders.Add("Token", "flowglobe");
+                _sharedClient.DefaultRequestHeaders.Add("Token", UserSettings.Instance.Transcriber.ApiToken);
             }
 
             return _sharedClient;
