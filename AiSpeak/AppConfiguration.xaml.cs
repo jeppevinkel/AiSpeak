@@ -8,17 +8,14 @@ public partial class AppConfiguration : Window
 {
     private readonly UserSettings _userSettings = UserSettings.Instance;
 
-    private string _googleCloudKey;
-    private string _elevenLabsApiKey;
-    private string _transcriberApiUrl;
-    private string _transcriberApiToken;
+    private string _googleCloudKey = "";
+    private string _elevenLabsApiKey = "";
+    private string _transcriberApiUrl = "";
+    private string _transcriberApiToken = "";
     
     private string GoogleCloudKey
     {
-        get
-        {
-            return _googleCloudKey;
-        }
+        get => _googleCloudKey;
         set
         {
             _googleCloudKey = value;
