@@ -22,6 +22,7 @@ public class UserSettings : Setting<UserSettings>
     public string GoogleCloudKey { get; set; } = "./google-key.json";
 
     public TranscriberSettings Transcriber { get; set; } = new();
+    public bool StandaloneMode { get; set; } = true;
 }
 
 public class TranscriberSettings

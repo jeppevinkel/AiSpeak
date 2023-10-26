@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:AiSpeak"
         mc:Ignorable="d"
         Title="Settings"
-        Height="190"
+        Height="220"
         Width="500"
         MinHeight="10"
         MinWidth="300"
@@ -20,6 +20,7 @@
         </Grid.ColumnDefinitions>
 
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
@@ -47,8 +48,11 @@
 
         <Label Grid.Column="0" Grid.Row="3">Transcriber Token:</Label>
         <TextBox x:Name="TxtBoxTranscriberApiToken" Grid.Column="1" Grid.Row="3" Margin="0,4,0,4" />
+        
+        <Label Grid.Column="0" Grid.Row="4">Standalone Mode:</Label>
+        <CheckBox x:Name="CheckBoxStandaloneMode" Grid.Column="1" Grid.Row="4" Margin="0,4,0,4" />
 
-        <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="5">
+        <StackPanel Grid.Column="0" Grid.ColumnSpan="2" Grid.Row="6">
             <Button x:Name="BtnOk" IsDefault="True">OK</Button>
             <Button x:Name="BtnCancel" IsCancel="True">Cancel</Button>
         </StackPanel>

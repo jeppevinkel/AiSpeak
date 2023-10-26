@@ -23,9 +23,10 @@ namespace AiSpeak
     public partial class MainWindow : Window
     {
         private readonly UserSettings _userSettings = UserSettings.Instance;
-        private readonly Recorder _recorder = new ();
+        private readonly Recorder _recorder = new();
         private readonly AudioPlayer _audioPlayer;
         private readonly Synthesizer _synthesizer;
+        private readonly WhisperManager _whisperManager = new WhisperManager();
 
         public MainWindow()
         {
@@ -57,7 +58,7 @@ namespace AiSpeak
 
             foreach (var keyName in Enum.GetNames<Key>())
             {
-                if(!Enum.TryParse(keyName, out Key value)) continue;
+                if (!Enum.TryParse(keyName, out Key value)) continue;
                 keyBindEntries.Add(new KeyBindEntry(keyName,
                     value));
             }
@@ -86,7 +87,8 @@ namespace AiSpeak
 
             // var synthesizer = new Synthesizer("x54B9HhFq9eENQmTm1o8");
             _synthesizer = new Synthesizer(_userSettings.SelectedVoice?.Id, _userSettings.SelectedModel);
-            _audioPlayer = new AudioPlayer(_userSettings.AudioDevice, _userSettings.SelectedKeyBindOut, _userSettings.KeyBindOutEnabled);
+            _audioPlayer = new AudioPlayer(_userSettings.AudioDevice, _userSettings.SelectedKeyBindOut,
+                _userSettings.KeyBindOutEnabled);
 
             Task.Run(async () =>
             {
@@ -103,12 +105,12 @@ namespace AiSpeak
                     VoiceSelection.SelectedValuePath = "Id";
                     VoiceSelection.SelectedValue = _userSettings.SelectedVoice;
                 });
-                
-                
+
+
                 Debug.WriteLine("Getting models...");
                 var models = await _synthesizer.GetModels();
                 Debug.WriteLine("Gotten models!");
-                
+
                 modelEntries = models;
 
                 Dispatcher.Invoke(() =>
@@ -118,6 +120,13 @@ namespace AiSpeak
                     ModelSelection.SelectedValuePath = "Id";
                     ModelSelection.SelectedValue = _userSettings.SelectedModel;
                 });
+
+                if (_userSettings.StandaloneMode)
+                {
+                    Debug.WriteLine("Loading Whisper model...");
+                    await _whisperManager.LoadModel();
+                    Debug.WriteLine("Whisper model loaded!");
+                }
             });
 
             AudioEntrySelection.SelectionChanged += (sender, args) =>
@@ -181,34 +190,65 @@ namespace AiSpeak
                 UserSettings.Save();
             };
 
-            _recorder.StoppedRecordingEvent += (sender, args) =>
+            _recorder.StoppedRecordingEvent += async (sender, args) =>
             {
                 Debug.WriteLine("Stopped recording.");
-                var outputFile = args.FilePath;
-                LatestRecording.Text = outputFile;
-                
-                Task.Run(async () =>
+
+                string? transcription = null;
+
+                switch (_userSettings.StandaloneMode)
                 {
-                    Debug.WriteLine("Start transcribing...");
-                    var transcription = await Transcriber.Transcribe(outputFile);
-                    Debug.WriteLine("Finished transcribing!");
+                    case true:
+                    {
+                        Debug.WriteLine("Doing standalone!");
+                        LatestRecording.Text = Guid.NewGuid().ToString();
+                        try
+                        {
+                            transcription = (await _whisperManager.Transcribe(args.WaveStream!)).Text;
+                        }
+                        catch (Exception ex)
+                        {
+                            Dispatcher.Invoke(() => { TranscribedText.Text = ex.Message; });
+                            return;
+                        }
 
-                    Dispatcher.Invoke(() => { TranscribedText.Text = transcription; });
+                        break;
+                    }
+                    case false:
+                    {
+                        var outputFile = args.FilePath;
+                        Dispatcher.Invoke(() => { LatestRecording.Text = outputFile; });
+                        Debug.WriteLine("Start transcribing...");
+                        try
+                        {
+                            transcription = await Transcriber.Transcribe(outputFile!);
+                        }
+                        catch (Exception ex)
+                        {
+                            Dispatcher.Invoke(() => { TranscribedText.Text = ex.Message; });
+                            return;
+                        }
 
-                    var client =
-                        TranslationClient.Create(
-                            GoogleCredential.FromFile(_userSettings.GoogleCloudKey));
-                    var response = client.TranslateText(transcription, _userSettings.Language);
+                        Debug.WriteLine("Finished transcribing!");
+                        break;
+                    }
+                }
 
-                    Dispatcher.Invoke(() => { TranslatedText.Text = response.TranslatedText; });
+                Dispatcher.Invoke(() => { TranscribedText.Text = transcription; });
 
-                    var clipPath = await _synthesizer.SynthesizeText(response.TranslatedText);
+                var client =
+                    TranslationClient.Create(
+                        GoogleCredential.FromFile(_userSettings.GoogleCloudKey));
+                var response = client.TranslateText(transcription, _userSettings.Language);
 
-                    Dispatcher.Invoke(() => { _audioPlayer.PlayFile(clipPath); });
-                    Debug.WriteLine("Finished handling recording.");
-                });
+                Dispatcher.Invoke(() => { TranslatedText.Text = response.TranslatedText; });
+
+                var clipPath = await _synthesizer.SynthesizeText(response.TranslatedText);
+
+                Dispatcher.Invoke(() => { _audioPlayer.PlayFile(clipPath); });
+                Debug.WriteLine("Finished handling recording.");
             };
-            
+
             // Subscribe to the key press event.
             KeyboardManager.Instance.OnKeyPressEvent += OnKeyPressEvent;
             // Subscribe to the key release event.
@@ -224,7 +264,7 @@ namespace AiSpeak
                 settingsDialog.ShowDialog();
             };
         }
-        
+
         private void OnKeyPressEvent(object sender, KeyEventArgs eventArgs)
         {
             if (eventArgs.KeyCode == _userSettings.SelectedKeyBind)
@@ -293,7 +333,7 @@ namespace AiSpeak
             return $"{Name}: {Code}";
         }
     }
-    
+
     public class KeyBindEntry
     {
         public string Name { get; set; }
@@ -307,7 +347,7 @@ namespace AiSpeak
 
         public override string ToString()
         {
-            return $"{(int)Id}: {Name}";
+            return $"{(int) Id}: {Name}";
         }
     }
 }

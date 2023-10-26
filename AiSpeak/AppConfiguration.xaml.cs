@@ -1,10 +1,8 @@
-﻿using System.Diagnostics;
-using System.Windows;
-using Microsoft.Win32;
+﻿using Microsoft.Win32;
 
 namespace AiSpeak;
 
-public partial class AppConfiguration : Window
+public partial class AppConfiguration
 {
     private readonly UserSettings _userSettings = UserSettings.Instance;
 
@@ -12,7 +10,8 @@ public partial class AppConfiguration : Window
     private string _elevenLabsApiKey = "";
     private string _transcriberApiUrl = "";
     private string _transcriberApiToken = "";
-    
+    private bool _standaloneMode = true;
+
     private string GoogleCloudKey
     {
         get => _googleCloudKey;
@@ -22,25 +21,37 @@ public partial class AppConfiguration : Window
             TxtGoogleCloudKey.Text = value;
         }
     }
-    
+
     private string ElevenLabsApiKey
     {
         get => _elevenLabsApiKey;
-        init => _elevenLabsApiKey = value;
+        set => _elevenLabsApiKey = value;
     }
-    
+
     private string TranscriberApiUrl
     {
         get => _transcriberApiUrl;
-        init => _transcriberApiUrl = value;
+        set => _transcriberApiUrl = value;
     }
-    
+
     private string TranscriberApiToken
     {
         get => _transcriberApiToken;
-        init => _transcriberApiToken = value;
+        set => _transcriberApiToken = value;
     }
-    
+
+    private bool StandaloneMode
+    {
+        get => _standaloneMode;
+        set
+        {
+            _standaloneMode = value;
+
+            TxtBoxTranscriberApiUrl.IsEnabled = !value;
+            TxtBoxTranscriberApiToken.IsEnabled = !value;
+        }
+    }
+
     public AppConfiguration()
     {
         InitializeComponent();
@@ -49,24 +60,29 @@ public partial class AppConfiguration : Window
         ElevenLabsApiKey = _userSettings.ElevenLabsApiKey;
         TranscriberApiUrl = _userSettings.Transcriber.ApiUrl;
         TranscriberApiToken = _userSettings.Transcriber.ApiToken;
+        StandaloneMode = _userSettings.StandaloneMode;
 
         TxtBoxElevenLabsApiKey.Text = ElevenLabsApiKey;
         TxtBoxTranscriberApiUrl.Text = TranscriberApiUrl;
         TxtBoxTranscriberApiToken.Text = TranscriberApiToken;
+        CheckBoxStandaloneMode.IsChecked = StandaloneMode;
 
-        TxtBoxElevenLabsApiKey.TextChanged += (sender, args) =>
+        TxtBoxElevenLabsApiKey.TextChanged += (_, _) => { ElevenLabsApiKey = TxtBoxElevenLabsApiKey.Text; };
+
+        TxtBoxTranscriberApiUrl.TextChanged += (_, _) => { TranscriberApiUrl = TxtBoxTranscriberApiUrl.Text; };
+
+        TxtBoxTranscriberApiToken.TextChanged += (_, _) =>
         {
-            _elevenLabsApiKey = TxtBoxElevenLabsApiKey.Text;
+            TranscriberApiToken = TxtBoxTranscriberApiToken.Text;
         };
 
-        TxtBoxTranscriberApiUrl.TextChanged += (sender, args) =>
+        CheckBoxStandaloneMode.Checked += (_, _) =>
         {
-            _transcriberApiUrl = TxtBoxTranscriberApiUrl.Text;
+            StandaloneMode = true;
         };
-
-        TxtBoxTranscriberApiToken.TextChanged += (sender, args) =>
+        CheckBoxStandaloneMode.Unchecked += (_, _) =>
         {
-            _transcriberApiToken = TxtBoxTranscriberApiToken.Text;
+            StandaloneMode = false;
         };
 
         BtnOpenFile.Click += (_, _) =>
@@ -82,10 +98,7 @@ public partial class AppConfiguration : Window
             }
         };
 
-        BtnCancel.Click += (_, _) =>
-        {
-            DialogResult = false;
-        };
+        BtnCancel.Click += (_, _) => { DialogResult = false; };
 
         BtnOk.Click += (_, _) =>
         {
@@ -93,6 +106,7 @@ public partial class AppConfiguration : Window
             _userSettings.ElevenLabsApiKey = ElevenLabsApiKey;
             _userSettings.Transcriber.ApiUrl = TranscriberApiUrl;
             _userSettings.Transcriber.ApiToken = TranscriberApiToken;
+            _userSettings.StandaloneMode = StandaloneMode;
             UserSettings.Save();
             DialogResult = true;
         };
